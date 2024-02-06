@@ -4,8 +4,12 @@ $ZoneID = "<ZONEID>"
 $certificateCN = "CN=*.example.com"
 
 $response = Invoke-RestMethod -UseBasicParsing -Uri "https://api.cloudflare.com/client/v4/zones/$ZoneID/dns_records?type=TLSA" -Method GET -Headers @{'Accept'='application/json';'X-Auth-Email'="$email";'X-Auth-Key'="$apikey"} -ContentType "application/json" 
-
-$cert = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Subject -eq $certificateCN }
+# perhaps change this to wherever your certificates are installed
+$cert = Get-ChildItem -Path Cert:\LocalMachine\My | 
+    Where-Object { $_.Subject -eq $certificateCN } | 
+    Sort-Object -Property NotAfter -Descending | 
+    Select-Object -First 1
+    
 if ($cert) {
     $sha256 = $cert.GetCertHash('SHA256')
     $Thumbprint = [System.BitConverter]::ToString($sha256) -replace '-'
